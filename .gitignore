@@ -1,0 +1,7 @@
+database(superbase)pw.txt
+*.pw.txt
+*password*.txt
+.env
+.env.*
+node_modules/
+.claude/settings.local.json

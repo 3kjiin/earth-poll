@@ -1,0 +1,865 @@
+<meta charset="utf-8">
+<title>지구 SOS 투표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<style>
+  :root{
+    --bg: #070b0a;
+    --bg-2: #0c1310;
+    --surface: #101815;
+    --surface-2: #17211d;
+    --border: rgba(238,242,239,0.09);
+    --border-strong: rgba(238,242,239,0.16);
+    --text: #eef2ef;
+    --text-dim: #9bb0a8;
+    --text-faint: #63756e;
+    --earth: #34c3a6;
+    --earth-dim: #1d7864;
+    --earth-glow: rgba(52,195,166,0.35);
+    --fire: #ff6a3d;
+    --fire-dim: #a8431f;
+    --fire-glow: rgba(255,106,61,0.35);
+    --gold: #d9b25f;
+    --gold-dim: #8f7538;
+    --danger: #ff6a3d;
+    --shadow: 0 20px 60px rgba(0,0,0,0.5);
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ color-scheme: dark; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.35), transparent),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1.5px 1.5px at 60% 70%, rgba(255,255,255,0.25), transparent),
+      radial-gradient(1px 1px at 30% 85%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 45% 45%, rgba(255,255,255,0.18), transparent),
+      radial-gradient(120% 90% at 50% -10%, var(--bg-2), var(--bg) 60%);
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: clamp(20px, 5vw, 56px) 16px 80px;
+  }
+
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color: var(--text-faint);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:6px; height:6px; border-radius:50%;
+    background: var(--fire);
+    box-shadow: 0 0 8px var(--fire-glow);
+    flex-shrink:0;
+  }
+
+  .page{
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .page.wide{ max-width: 720px; }
+
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: clamp(24px, 5vw, 44px);
+  }
+
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom: 18px;
+  }
+
+  .admin-link{
+    background:none; border:none; cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    padding: 4px 6px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .admin-link:hover{ color: var(--text-dim); opacity:1; }
+  .admin-link:focus-visible{ outline: 2px solid var(--earth); outline-offset:2px; border-radius:4px; }
+
+  .admin-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing:0.08em;
+    color: var(--earth);
+    background: rgba(52,195,166,0.1);
+    border: 1px solid rgba(52,195,166,0.3);
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+  .admin-badge button{
+    background:none; border:none; color: var(--text-dim); cursor:pointer;
+    font-family:'IBM Plex Mono', monospace; font-size:10px; text-decoration:underline;
+    padding:0;
+  }
+
+  h1{
+    font-family:'Gowun Batang', serif;
+    font-weight:700;
+    font-size: clamp(26px, 4.4vw, 36px);
+    line-height:1.35;
+    text-wrap: balance;
+    margin: 4px 0 0;
+  }
+  h2{
+    font-family:'Gowun Batang', serif;
+    font-weight:700;
+    font-size: clamp(21px, 3.2vw, 26px);
+    margin: 0;
+  }
+
+  p.lead{
+    color: var(--text-dim);
+    font-size:15.5px;
+    line-height:1.75;
+    margin: 18px 0 0;
+  }
+
+  /* --- Earth porthole --- */
+  .porthole-wrap{
+    display:flex; justify-content:center;
+    margin: 30px 0 6px;
+  }
+  .porthole{
+    position:relative;
+    width: min(240px, 60vw);
+    height: min(240px, 60vw);
+    border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, #3a4642, #171f1c 70%);
+    box-shadow:
+      inset 0 0 0 10px #1b2320,
+      inset 0 0 0 12px rgba(255,255,255,0.06),
+      0 0 40px rgba(0,0,0,0.6),
+      0 0 60px var(--fire-glow);
+    padding: 14px;
+  }
+  .porthole .rivet{
+    position:absolute; width:7px; height:7px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #cfd6d3, #6b746f 70%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .porthole svg{ width:100%; height:100%; border-radius:50%; display:block; }
+
+  @keyframes crackGrow{
+    0%, 15%{ stroke-dashoffset: 60; opacity:0; }
+    35%{ opacity:1; }
+    60%, 100%{ stroke-dashoffset: 0; opacity:1; }
+  }
+  @keyframes emberRise{
+    0%{ transform: translateY(0) scale(0.6); opacity:0; }
+    15%{ opacity:1; }
+    100%{ transform: translateY(-70px) scale(1); opacity:0; }
+  }
+  @keyframes glowPulse{
+    0%, 100%{ filter: drop-shadow(0 0 2px var(--fire)); }
+    50%{ filter: drop-shadow(0 0 7px var(--fire)); }
+  }
+  @keyframes hueShift{
+    0%, 100%{ opacity: 0.15; }
+    50%{ opacity: 0.75; }
+  }
+  .crack{
+    stroke: var(--fire);
+    stroke-width: 1.6;
+    fill:none;
+    stroke-linecap: round;
+    stroke-dasharray: 60;
+    animation: crackGrow 6s ease-in-out infinite, glowPulse 3s ease-in-out infinite;
+  }
+  .crack.c2{ animation-delay: 1.2s, 0s; }
+  .crack.c3{ animation-delay: 2.4s, 0.6s; }
+  .fireglow{
+    animation: hueShift 6s ease-in-out infinite;
+  }
+  .ember{
+    animation: emberRise 4s ease-in infinite;
+  }
+  .ember.e2{ animation-delay: 1.1s; }
+  .ember.e3{ animation-delay: 2.3s; }
+  .ember.e4{ animation-delay: 3.1s; }
+
+  @media (prefers-reduced-motion: reduce){
+    .crack, .fireglow, .ember{ animation: none !important; }
+    .crack{ stroke-dashoffset:0; opacity:1; }
+    .fireglow{ opacity:0.45; }
+  }
+
+  /* --- vote options --- */
+  .options{
+    display:flex; flex-direction:column; gap:10px;
+    margin-top: 26px;
+  }
+  .option{
+    display:flex; align-items:center; gap:12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    cursor:pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .option:hover{ border-color: var(--border-strong); }
+  .option input{ accent-color: var(--earth); width:17px; height:17px; flex-shrink:0; }
+  .option.checked{
+    border-color: var(--earth-dim);
+    background: rgba(52,195,166,0.08);
+  }
+  .option label{ font-size:15px; cursor:pointer; flex:1; }
+  .option .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color: var(--text-faint);
+    letter-spacing:0.06em;
+  }
+
+  .actions{ display:flex; flex-direction:column; gap:10px; margin-top:24px; }
+  button.btn{
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding: 13px 20px;
+    border-radius: var(--radius-sm);
+    cursor:pointer;
+    border:1px solid transparent;
+    transition: transform .1s ease, filter .15s ease, opacity .15s ease;
+  }
+  button.btn:active{ transform: scale(0.98); }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn:focus-visible{ outline:2px solid var(--earth); outline-offset:2px; }
+  .btn-primary{ background: var(--earth); color:#06120f; }
+  .btn-primary:hover:not(:disabled){ filter:brightness(1.08); }
+  .btn-secondary{ background:transparent; color: var(--text-dim); border-color: var(--border-strong); }
+  .btn-secondary:hover{ color:var(--text); border-color: var(--text-dim); }
+  .btn-small{ padding:6px 12px; font-size:12.5px; border-radius:7px; }
+  .btn-danger{ background:transparent; color: var(--fire); border-color: rgba(255,106,61,0.35); }
+  .btn-danger:hover{ background: rgba(255,106,61,0.1); }
+
+  .note{
+    margin-top:14px;
+    font-size:13px;
+    color: var(--text-faint);
+    text-align:center;
+    min-height:18px;
+  }
+  .note.err{ color: var(--fire); }
+  .note.ok{ color: var(--earth); }
+
+  /* --- results --- */
+  .backlink{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; color:var(--text-dim);
+    text-decoration:none; letter-spacing:0.04em;
+    background:none; border:none; cursor:pointer; padding:0;
+  }
+  .backlink:hover{ color:var(--text); }
+
+  .results-head{ margin-top:16px; }
+  .total-count{
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--text-faint);
+    font-size:13px;
+    margin-top:6px;
+  }
+  .total-count b{ color:var(--text-dim); font-weight:600; }
+
+  .donut-row{
+    display:flex; align-items:center; gap:32px;
+    margin-top:28px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .donut-wrap{ position:relative; width:180px; height:180px; flex-shrink:0; }
+  .donut-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .donut-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .donut-center .big{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:26px; font-weight:600; color:var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .donut-center .small{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px; color:var(--text-faint); letter-spacing:0.08em;
+  }
+  .donut-seg{ transition: stroke-dasharray .5s ease; }
+
+  .legend{ display:flex; flex-direction:column; gap:12px; min-width:180px; }
+  .legend-item{ display:flex; align-items:center; gap:10px; }
+  .legend-dot{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .legend-label{ font-size:14px; color:var(--text-dim); flex:1; }
+  .legend-pct{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px; font-weight:600; color:var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .legend-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; color:var(--text-faint);
+  }
+
+  hr.div{
+    border:none; border-top:1px solid var(--border);
+    margin: 34px 0 26px;
+  }
+
+  .comment-form textarea{
+    width:100%;
+    background: var(--surface-2);
+    border:1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14.5px;
+    padding:12px 14px;
+    resize:vertical;
+    min-height:70px;
+  }
+  .comment-form textarea:focus-visible, .comment-form textarea:focus{
+    outline:2px solid var(--earth); outline-offset:1px;
+  }
+  .comment-form-foot{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:10px; gap:10px;
+  }
+  .comment-as{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px; color:var(--text-faint);
+  }
+
+  .comments-list{ display:flex; flex-direction:column; gap:14px; margin-top:22px; }
+  .comment{
+    border:1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding:14px 16px;
+  }
+  .comment-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    gap:10px; margin-bottom:6px;
+  }
+  .comment-name{ font-size:13.5px; font-weight:600; color:var(--earth); }
+  .comment-time{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-faint); flex-shrink:0; }
+  .comment-body{ font-size:14.5px; line-height:1.65; color:var(--text-dim); white-space:pre-wrap; word-break:break-word; }
+  .comment-admin-row{ display:flex; gap:8px; margin-top:10px; }
+  .comment-edit textarea{
+    width:100%; background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:7px; color:var(--text); font-family:'Noto Sans KR',sans-serif;
+    font-size:14px; padding:10px; min-height:60px;
+  }
+  .empty-state{
+    text-align:center; color:var(--text-faint); font-size:13.5px;
+    padding: 20px 0;
+  }
+
+  /* --- admin modal --- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(3,6,5,0.72);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:50;
+    backdrop-filter: blur(2px);
+  }
+  .modal{
+    background: var(--surface); border:1px solid var(--border-strong);
+    border-radius: var(--radius); padding:28px;
+    width:100%; max-width:320px;
+    box-shadow: var(--shadow);
+  }
+  .modal h3{
+    font-family:'Gowun Batang', serif; margin:0 0 4px; font-size:19px;
+  }
+  .modal p.sub{ color:var(--text-faint); font-size:12.5px; margin:0 0 18px; }
+  .field{ margin-bottom:12px; }
+  .field label{
+    display:block; font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--text-faint); margin-bottom:6px;
+  }
+  .field input{
+    width:100%; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:7px; color:var(--text); font-size:14.5px; padding:10px 12px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .field input:focus-visible, .field input:focus{ outline:2px solid var(--earth); outline-offset:1px; }
+  .modal-actions{ display:flex; gap:8px; margin-top:18px; }
+  .modal-actions .btn{ flex:1; }
+  .modal-err{ color:var(--fire); font-size:12.5px; margin-top:10px; min-height:16px; }
+
+  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+
+<div id="app" class="page"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var ADMIN_ID = '3ksoft';
+  var ADMIN_PW = '6406';
+
+  var SUPABASE_URL = 'https://qdhxaqbkjfmgdrfvhzjh.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkaHhhcWJramZtZ2RyZnZoempoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjI0NjcsImV4cCI6MjEwMzc5ODQ2N30.-7hrpbl-rZLEKoZri2ENeWaDHl_BHTLesdhnq7e9uRU';
+
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var OPTIONS = [
+    { key:'yes', label:'동참하고 싶다', color:'var(--earth)', hex:'#34c3a6' },
+    { key:'no', label:'동참하고 싶지 않다', color:'var(--fire)', hex:'#ff6a3d' },
+    { key:'unsure', label:'잘 모르겠다', color:'var(--gold)', hex:'#d9b25f' }
+  ];
+
+  var app = document.getElementById('app');
+
+  // state.comments items: { id, name, body, created_at }
+  var state = { votes:{ yes:0, no:0, unsure:0 }, comments:[] };
+
+  async function loadVotes(){
+    var res = await supabase.from('votes').select('option');
+    if(res.error){ console.error(res.error); return; }
+    var counts = { yes:0, no:0, unsure:0 };
+    (res.data || []).forEach(function(row){
+      if(counts.hasOwnProperty(row.option)) counts[row.option]++;
+    });
+    state.votes = counts;
+  }
+
+  async function loadComments(){
+    var res = await supabase.from('comments').select('*').order('created_at', { ascending:false });
+    if(res.error){ console.error(res.error); return; }
+    state.comments = res.data || [];
+  }
+
+  function subscribeRealtime(){
+    supabase
+      .channel('earth-poll-changes')
+      .on('postgres_changes', { event:'*', schema:'public', table:'votes' }, async function(){
+        await loadVotes();
+        render();
+      })
+      .on('postgres_changes', { event:'*', schema:'public', table:'comments' }, async function(){
+        await loadComments();
+        render();
+      })
+      .subscribe();
+  }
+
+  var selectedOption = null;
+  var isAdmin = sessionStorage.getItem('earthPollAdmin') === '1';
+  var editingCommentId = null;
+  var busy = false;
+
+  function getVoterName(){
+    var n = localStorage.getItem('earthPollName');
+    if(!n){
+      n = '지구인 #' + Math.floor(1000 + Math.random()*9000);
+      localStorage.setItem('earthPollName', n);
+    }
+    return n;
+  }
+
+  function hasVoted(){ return !!localStorage.getItem('earthPollVoted'); }
+
+  function totalVotes(){
+    return state.votes.yes + state.votes.no + state.votes.unsure;
+  }
+
+  function pct(n, total){
+    if(!total) return 0;
+    return Math.round((n/total)*1000)/10;
+  }
+
+  function escapeHTML(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function fmtTime(iso){
+    try{
+      return new Date(iso).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }catch(e){ return ''; }
+  }
+
+  function route(){ return location.hash === '#results' ? 'results' : 'vote'; }
+  function goTo(r){ location.hash = r === 'results' ? '#results' : '#vote'; }
+  window.addEventListener('hashchange', render);
+
+  // ---------- VOTE VIEW ----------
+  function renderVote(){
+    app.className = 'page';
+    var voted = hasVoted();
+    var html = '';
+    html += '<div class="eyebrow">EARTH ALERT · LIVE POLL</div>';
+    html += '<h1>지구를 살리는 일에,<br>당신은 동참하시겠습니까?</h1>';
+
+    html += '<div class="porthole-wrap"><div class="porthole">' + rivets() + earthSVG() + '</div></div>';
+
+    html += '<p class="lead">기후 위기는 더 이상 먼 미래의 이야기가 아닙니다. 지금 이 순간에도 빙하는 녹고, 숲은 사라지고, 바다는 뜨거워지고 있습니다. 작은 습관 하나를 바꾸는 일이 지구가 버틸 수 있는 시간을 늘립니다. 당신의 생각을 투표로 남겨주세요.</p>';
+
+    html += '<div class="options" role="radiogroup" aria-label="투표 선택지">';
+    OPTIONS.forEach(function(opt){
+      var checked = selectedOption === opt.key;
+      html += '<div class="option' + (checked ? ' checked' : '') + '" data-key="' + opt.key + '">' +
+        '<input type="radio" name="vote" id="opt-' + opt.key + '" value="' + opt.key + '"' + (checked ? ' checked' : '') + (voted ? ' disabled' : '') + '>' +
+        '<label for="opt-' + opt.key + '">' + opt.label + '</label>' +
+        '</div>';
+    });
+    html += '</div>';
+
+    html += '<div class="actions">';
+    if(voted){
+      html += '<button class="btn btn-primary" id="btn-vote" disabled>이미 투표해주셨습니다</button>';
+    } else {
+      html += '<button class="btn btn-primary" id="btn-vote"' + (selectedOption ? '' : ' disabled') + '>투표하기</button>';
+    }
+    html += '<button class="btn btn-secondary" id="btn-results">전체 결과 보기</button>';
+    html += '</div>';
+    html += '<div class="note' + (voteNoteClass||'') + '" id="vote-note">' + (voteNote||'') + '</div>';
+
+    app.innerHTML = html;
+
+    app.querySelectorAll('.option').forEach(function(el){
+      el.addEventListener('click', function(){
+        if(voted) return;
+        selectedOption = el.getAttribute('data-key');
+        render();
+      });
+    });
+    var vb = document.getElementById('btn-vote');
+    if(vb) vb.addEventListener('click', onVote);
+    document.getElementById('btn-results').addEventListener('click', function(){ goTo('results'); });
+  }
+
+  var voteNote = '';
+  var voteNoteClass = '';
+
+  async function onVote(){
+    if(!selectedOption || hasVoted() || busy) return;
+    busy = true;
+    voteNote = '투표를 반영하는 중입니다…';
+    voteNoteClass = '';
+    render();
+    var chosen = selectedOption;
+    var res = await supabase.from('votes').insert({ option: chosen });
+    busy = false;
+    if(!res.error){
+      localStorage.setItem('earthPollVoted', chosen);
+      await loadVotes();
+      voteNote = '투표해주셔서 감사합니다.';
+      voteNoteClass = ' ok';
+      setTimeout(function(){ goTo('results'); }, 200);
+    } else {
+      voteNote = '투표 반영에 실패했습니다. 잠시 후 다시 시도해주세요.';
+      voteNoteClass = ' err';
+      render();
+    }
+  }
+
+  function rivets(){
+    var pts = [[20,20],[220,20],[20,220],[220,220],[120,12],[120,228],[12,120],[228,120]];
+    return pts.map(function(p){
+      return '<div class="rivet" style="left:' + (p[0]-3.5) + 'px; top:' + (p[1]-3.5) + 'px;"></div>';
+    }).join('');
+  }
+
+  function earthSVG(){
+    return '' +
+    '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs>' +
+        '<radialGradient id="ocean" cx="35%" cy="35%" r="75%">' +
+          '<stop offset="0%" stop-color="#1c5f6e"/>' +
+          '<stop offset="100%" stop-color="#0b2a30"/>' +
+        '</radialGradient>' +
+        '<radialGradient id="fire" cx="50%" cy="55%" r="65%">' +
+          '<stop offset="0%" stop-color="#ff6a3d" stop-opacity="0.9"/>' +
+          '<stop offset="60%" stop-color="#a8431f" stop-opacity="0.5"/>' +
+          '<stop offset="100%" stop-color="#2a0d05" stop-opacity="0"/>' +
+        '</radialGradient>' +
+        '<clipPath id="clip"><circle cx="100" cy="100" r="96"/></clipPath>' +
+      '</defs>' +
+      '<g clip-path="url(#clip)">' +
+        '<circle cx="100" cy="100" r="96" fill="url(#ocean)"/>' +
+        '<circle cx="100" cy="100" r="96" fill="url(#fire)" class="fireglow"/>' +
+        '<path d="M40 70 C55 55, 80 58, 90 72 C98 82, 82 92, 68 88 C54 84, 42 84, 40 70 Z" fill="#3a5a3f" opacity="0.85"/>' +
+        '<path d="M110 50 C130 46, 150 60, 145 78 C140 94, 118 96, 108 82 C100 70, 100 54, 110 50 Z" fill="#3a5a3f" opacity="0.85"/>' +
+        '<path d="M60 120 C80 112, 108 118, 112 138 C116 156, 90 168, 70 158 C52 150, 44 130, 60 120 Z" fill="#33513a" opacity="0.85"/>' +
+        '<path d="M130 130 C148 126, 164 138, 158 152 C152 166, 130 166, 122 152 C116 140, 118 134, 130 130 Z" fill="#33513a" opacity="0.8"/>' +
+        '<path class="crack c1" d="M70 60 L95 90 L85 110 L110 145" />' +
+        '<path class="crack c2" d="M130 60 L112 95 L128 118 L118 150" />' +
+        '<path class="crack c3" d="M45 130 L75 128 L90 150 L120 155" />' +
+        '<circle class="ember e1" cx="70" cy="150" r="2.4" fill="#ffb27a"/>' +
+        '<circle class="ember e2" cx="120" cy="140" r="2" fill="#ff8a5b"/>' +
+        '<circle class="ember e3" cx="95" cy="160" r="2.6" fill="#ffb27a"/>' +
+        '<circle class="ember e4" cx="140" cy="120" r="1.8" fill="#ff8a5b"/>' +
+      '</g>' +
+      '<circle cx="100" cy="100" r="96" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>' +
+    '</svg>';
+  }
+
+  // ---------- RESULTS VIEW ----------
+  var commentDraft = '';
+  var commentNote = '';
+  var commentNoteClass = '';
+
+  function renderResults(){
+    app.className = 'page wide';
+    var total = totalVotes();
+    var html = '';
+
+    html += '<div class="topbar">';
+    html += '<button class="backlink" id="btn-back">&larr; 투표하러 가기</button>';
+    if(isAdmin){
+      html += '<span class="admin-badge">관리자 모드 <button id="btn-logout">로그아웃</button></span>';
+    } else {
+      html += '<button class="admin-link" id="btn-admin">admin</button>';
+    }
+    html += '</div>';
+
+    html += '<div class="results-head">';
+    html += '<div class="eyebrow">EARTH ALERT · RESULTS</div>';
+    html += '<h2>실시간 투표 현황</h2>';
+    html += '<div class="total-count">참여 인원 <b>' + total + '</b>명</div>';
+    html += '</div>';
+
+    html += '<div class="donut-row">';
+    html += '<div class="donut-wrap">' + donutSVG(total) + '<div class="donut-center"><span class="big">' + total + '</span><span class="small">TOTAL</span></div></div>';
+    html += '<div class="legend">';
+    OPTIONS.forEach(function(opt){
+      var n = state.votes[opt.key] || 0;
+      var p = pct(n, total);
+      html += '<div class="legend-item">' +
+        '<span class="legend-dot" style="background:' + opt.hex + '"></span>' +
+        '<span class="legend-label">' + opt.label + '</span>' +
+        '<span style="text-align:right"><span class="legend-pct">' + p + '%</span><br><span class="legend-count">' + n + '표</span></span>' +
+        '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+
+    html += '<hr class="div">';
+
+    html += '<h2 style="font-size:18px;margin-bottom:14px;">댓글 남기기</h2>';
+    html += '<div class="comment-form">' +
+      '<textarea id="comment-input" placeholder="지구를 위한 생각을 남겨주세요…" maxlength="500">' + escapeHTML(commentDraft) + '</textarea>' +
+      '<div class="comment-form-foot">' +
+        '<span class="comment-as">' + escapeHTML(getVoterName()) + ' 으로 게시됩니다</span>' +
+        '<button class="btn btn-primary btn-small" id="btn-comment">댓글 남기기</button>' +
+      '</div>' +
+      '<div class="note' + commentNoteClass + '">' + commentNote + '</div>' +
+    '</div>';
+
+    var comments = state.comments.slice().sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+    html += '<div class="comments-list">';
+    if(comments.length === 0){
+      html += '<div class="empty-state">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</div>';
+    } else {
+      comments.forEach(function(c){
+        html += renderComment(c);
+      });
+    }
+    html += '</div>';
+
+    app.innerHTML = html;
+
+    document.getElementById('btn-back').addEventListener('click', function(){ goTo('vote'); });
+    if(isAdmin){
+      document.getElementById('btn-logout').addEventListener('click', function(){
+        isAdmin = false;
+        sessionStorage.removeItem('earthPollAdmin');
+        render();
+      });
+    } else {
+      document.getElementById('btn-admin').addEventListener('click', openAdminModal);
+    }
+    var ci = document.getElementById('comment-input');
+    ci.addEventListener('input', function(){ commentDraft = ci.value; });
+    document.getElementById('btn-comment').addEventListener('click', onAddComment);
+
+    wireCommentActions();
+  }
+
+  function renderComment(c){
+    var editing = editingCommentId === c.id;
+    var html = '<div class="comment" data-id="' + c.id + '">';
+    html += '<div class="comment-head"><span class="comment-name">' + escapeHTML(c.name) + '</span><span class="comment-time">' + fmtTime(c.created_at) + '</span></div>';
+    if(editing){
+      html += '<div class="comment-edit"><textarea id="edit-' + c.id + '">' + escapeHTML(c.body) + '</textarea>' +
+        '<div class="comment-admin-row">' +
+          '<button class="btn btn-primary btn-small" data-save="' + c.id + '">저장</button>' +
+          '<button class="btn btn-secondary btn-small" data-cancel="' + c.id + '">취소</button>' +
+        '</div></div>';
+    } else {
+      html += '<div class="comment-body">' + escapeHTML(c.body) + '</div>';
+      if(isAdmin){
+        html += '<div class="comment-admin-row">' +
+          '<button class="btn btn-secondary btn-small" data-edit="' + c.id + '">수정</button>' +
+          '<button class="btn btn-danger btn-small" data-delete="' + c.id + '">삭제</button>' +
+          '</div>';
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function wireCommentActions(){
+    app.querySelectorAll('[data-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        editingCommentId = btn.getAttribute('data-edit');
+        render();
+      });
+    });
+    app.querySelectorAll('[data-cancel]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        editingCommentId = null;
+        render();
+      });
+    });
+    app.querySelectorAll('[data-save]').forEach(function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-save');
+        var ta = document.getElementById('edit-' + id);
+        var newText = ta.value.trim();
+        if(!newText) return;
+        var res = await supabase.from('comments').update({ body: newText }).eq('id', id);
+        if(!res.error) await loadComments();
+        editingCommentId = null;
+        render();
+      });
+    });
+    app.querySelectorAll('[data-delete]').forEach(function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-delete');
+        if(!confirm('이 댓글을 삭제할까요?')) return;
+        var res = await supabase.from('comments').delete().eq('id', id);
+        if(!res.error) await loadComments();
+        render();
+      });
+    });
+  }
+
+  async function onAddComment(){
+    var text = commentDraft.trim();
+    if(!text || busy) return;
+    busy = true;
+    var name = getVoterName();
+    commentNote = '게시하는 중…';
+    commentNoteClass = '';
+    render();
+    var res = await supabase.from('comments').insert({ name: name, body: text });
+    busy = false;
+    commentDraft = '';
+    if(!res.error){
+      await loadComments();
+      commentNote = '댓글이 게시되었습니다.';
+      commentNoteClass = ' ok';
+    } else {
+      commentNote = '게시에 실패했습니다. 다시 시도해주세요.';
+      commentNoteClass = ' err';
+    }
+    render();
+  }
+
+  function donutSVG(total){
+    var r = 72, c = 2*Math.PI*r, cx=90, cy=90;
+    var offset = 0;
+    var segs = '';
+    if(total === 0){
+      segs = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="18"/>';
+    } else {
+      OPTIONS.forEach(function(opt){
+        var n = state.votes[opt.key] || 0;
+        var frac = n/total;
+        var len = frac*c;
+        segs += '<circle class="donut-seg" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + opt.hex + '" stroke-width="18" ' +
+          'stroke-dasharray="' + len + ' ' + (c-len) + '" stroke-dashoffset="' + (-offset) + '" stroke-linecap="butt"/>';
+        offset += len;
+      });
+    }
+    return '<svg viewBox="0 0 180 180">' + segs + '</svg>';
+  }
+
+  // ---------- ADMIN MODAL ----------
+  function openAdminModal(){
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="admin-title">' +
+        '<h3 id="admin-title">관리자 로그인</h3>' +
+        '<p class="sub">댓글을 관리하려면 로그인하세요.</p>' +
+        '<div class="field"><label for="admin-id">ID</label><input type="text" id="admin-id" autocomplete="off"></div>' +
+        '<div class="field"><label for="admin-pw">PASSWORD</label><input type="password" id="admin-pw" autocomplete="off"></div>' +
+        '<div class="modal-err" id="admin-err"></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-secondary" id="admin-cancel">취소</button>' +
+          '<button class="btn btn-primary" id="admin-submit">로그인</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    function close(){ overlay.remove(); }
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) close(); });
+    document.getElementById('admin-cancel').addEventListener('click', close);
+    var idInput = document.getElementById('admin-id');
+    var pwInput = document.getElementById('admin-pw');
+    idInput.focus();
+
+    function tryLogin(){
+      var idv = idInput.value.trim();
+      var pwv = pwInput.value;
+      if(idv === ADMIN_ID && pwv === ADMIN_PW){
+        isAdmin = true;
+        sessionStorage.setItem('earthPollAdmin', '1');
+        close();
+        render();
+      } else {
+        document.getElementById('admin-err').textContent = 'ID 또는 비밀번호가 올바르지 않습니다.';
+      }
+    }
+    document.getElementById('admin-submit').addEventListener('click', tryLogin);
+    [idInput, pwInput].forEach(function(inp){
+      inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryLogin(); });
+    });
+  }
+
+  function render(){
+    if(route() === 'results') renderResults();
+    else renderVote();
+  }
+
+  render();
+  Promise.all([loadVotes(), loadComments()]).then(function(){
+    render();
+    subscribeRealtime();
+  });
+})();
+</script>
