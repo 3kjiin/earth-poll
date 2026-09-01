@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "earth-poll-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8744", "--directory", "earth-poll"],
+      "port": 8744
+    }
+  ]
+}
