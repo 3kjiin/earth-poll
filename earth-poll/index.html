@@ -167,50 +167,9 @@
     background: radial-gradient(circle at 35% 35%, #cfd6d3, #6b746f 70%);
     box-shadow: 0 1px 2px rgba(0,0,0,0.6);
   }
-  .porthole svg{ width:100%; height:100%; border-radius:50%; display:block; }
-
-  @keyframes crackGrow{
-    0%, 15%{ stroke-dashoffset: 60; opacity:0; }
-    35%{ opacity:1; }
-    60%, 100%{ stroke-dashoffset: 0; opacity:1; }
-  }
-  @keyframes emberRise{
-    0%{ transform: translateY(0) scale(0.6); opacity:0; }
-    15%{ opacity:1; }
-    100%{ transform: translateY(-70px) scale(1); opacity:0; }
-  }
-  @keyframes glowPulse{
-    0%, 100%{ filter: drop-shadow(0 0 2px var(--fire)); }
-    50%{ filter: drop-shadow(0 0 7px var(--fire)); }
-  }
-  @keyframes hueShift{
-    0%, 100%{ opacity: 0.15; }
-    50%{ opacity: 0.75; }
-  }
-  .crack{
-    stroke: var(--fire);
-    stroke-width: 1.6;
-    fill:none;
-    stroke-linecap: round;
-    stroke-dasharray: 60;
-    animation: crackGrow 6s ease-in-out infinite, glowPulse 3s ease-in-out infinite;
-  }
-  .crack.c2{ animation-delay: 1.2s, 0s; }
-  .crack.c3{ animation-delay: 2.4s, 0.6s; }
-  .fireglow{
-    animation: hueShift 6s ease-in-out infinite;
-  }
-  .ember{
-    animation: emberRise 4s ease-in infinite;
-  }
-  .ember.e2{ animation-delay: 1.1s; }
-  .ember.e3{ animation-delay: 2.3s; }
-  .ember.e4{ animation-delay: 3.1s; }
-
-  @media (prefers-reduced-motion: reduce){
-    .crack, .fireglow, .ember{ animation: none !important; }
-    .crack{ stroke-dashoffset:0; opacity:1; }
-    .fireglow{ opacity:0.45; }
+  .porthole img{
+    width:100%; height:100%; border-radius:50%; display:block;
+    object-fit: cover;
   }
 
   /* --- vote options --- */
@@ -527,7 +486,7 @@
     html += '<div class="eyebrow">EARTH ALERT · LIVE POLL</div>';
     html += '<h1>지구를 살리는 일에,<br>당신은 동참하시겠습니까?</h1>';
 
-    html += '<div class="porthole-wrap"><div class="porthole">' + rivets() + earthSVG() + '</div></div>';
+    html += '<div class="porthole-wrap"><div class="porthole">' + rivets() + '<img src="assets/earth_storyboard.gif" alt="파괴되는 지구를 보여주는 애니메이션">' + '</div></div>';
 
     html += '<p class="lead">기후 위기는 더 이상 먼 미래의 이야기가 아닙니다. 지금 이 순간에도 빙하는 녹고, 숲은 사라지고, 바다는 뜨거워지고 있습니다. 작은 습관 하나를 바꾸는 일이 지구가 버틸 수 있는 시간을 늘립니다. 당신의 생각을 투표로 남겨주세요.</p>';
 
@@ -589,40 +548,6 @@
     return pts.map(function(p){
       return '<div class="rivet" style="left:' + (p[0]-3.5) + 'px; top:' + (p[1]-3.5) + 'px;"></div>';
     }).join('');
-  }
-
-  function earthSVG(){
-    return '' +
-    '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">' +
-      '<defs>' +
-        '<radialGradient id="ocean" cx="35%" cy="35%" r="75%">' +
-          '<stop offset="0%" stop-color="#1c5f6e"/>' +
-          '<stop offset="100%" stop-color="#0b2a30"/>' +
-        '</radialGradient>' +
-        '<radialGradient id="fire" cx="50%" cy="55%" r="65%">' +
-          '<stop offset="0%" stop-color="#ff6a3d" stop-opacity="0.9"/>' +
-          '<stop offset="60%" stop-color="#a8431f" stop-opacity="0.5"/>' +
-          '<stop offset="100%" stop-color="#2a0d05" stop-opacity="0"/>' +
-        '</radialGradient>' +
-        '<clipPath id="clip"><circle cx="100" cy="100" r="96"/></clipPath>' +
-      '</defs>' +
-      '<g clip-path="url(#clip)">' +
-        '<circle cx="100" cy="100" r="96" fill="url(#ocean)"/>' +
-        '<circle cx="100" cy="100" r="96" fill="url(#fire)" class="fireglow"/>' +
-        '<path d="M40 70 C55 55, 80 58, 90 72 C98 82, 82 92, 68 88 C54 84, 42 84, 40 70 Z" fill="#3a5a3f" opacity="0.85"/>' +
-        '<path d="M110 50 C130 46, 150 60, 145 78 C140 94, 118 96, 108 82 C100 70, 100 54, 110 50 Z" fill="#3a5a3f" opacity="0.85"/>' +
-        '<path d="M60 120 C80 112, 108 118, 112 138 C116 156, 90 168, 70 158 C52 150, 44 130, 60 120 Z" fill="#33513a" opacity="0.85"/>' +
-        '<path d="M130 130 C148 126, 164 138, 158 152 C152 166, 130 166, 122 152 C116 140, 118 134, 130 130 Z" fill="#33513a" opacity="0.8"/>' +
-        '<path class="crack c1" d="M70 60 L95 90 L85 110 L110 145" />' +
-        '<path class="crack c2" d="M130 60 L112 95 L128 118 L118 150" />' +
-        '<path class="crack c3" d="M45 130 L75 128 L90 150 L120 155" />' +
-        '<circle class="ember e1" cx="70" cy="150" r="2.4" fill="#ffb27a"/>' +
-        '<circle class="ember e2" cx="120" cy="140" r="2" fill="#ff8a5b"/>' +
-        '<circle class="ember e3" cx="95" cy="160" r="2.6" fill="#ffb27a"/>' +
-        '<circle class="ember e4" cx="140" cy="120" r="1.8" fill="#ff8a5b"/>' +
-      '</g>' +
-      '<circle cx="100" cy="100" r="96" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>' +
-    '</svg>';
   }
 
   // ---------- RESULTS VIEW ----------
