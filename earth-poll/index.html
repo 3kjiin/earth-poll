@@ -487,8 +487,6 @@
     return n;
   }
 
-  function hasVoted(){ return !!localStorage.getItem('earthPollVoted'); }
-
   function totalVotes(){
     return state.votes.yes + state.votes.no + state.votes.unsure;
   }
@@ -517,7 +515,6 @@
   // ---------- VOTE VIEW ----------
   function renderVote(){
     app.className = 'page';
-    var voted = hasVoted();
     var html = '';
     html += '<div class="eyebrow">EARTH ALERT · LIVE POLL</div>';
     html += '<h1>지구를 살리는 일에,<br>당신은 동참하시겠습니까?</h1>';
@@ -530,18 +527,14 @@
     OPTIONS.forEach(function(opt){
       var checked = selectedOption === opt.key;
       html += '<div class="option' + (checked ? ' checked' : '') + '" data-key="' + opt.key + '">' +
-        '<input type="radio" name="vote" id="opt-' + opt.key + '" value="' + opt.key + '"' + (checked ? ' checked' : '') + (voted ? ' disabled' : '') + '>' +
+        '<input type="radio" name="vote" id="opt-' + opt.key + '" value="' + opt.key + '"' + (checked ? ' checked' : '') + '>' +
         '<label for="opt-' + opt.key + '">' + opt.label + '</label>' +
         '</div>';
     });
     html += '</div>';
 
     html += '<div class="actions">';
-    if(voted){
-      html += '<button class="btn btn-primary" id="btn-vote" disabled>이미 투표해주셨습니다</button>';
-    } else {
-      html += '<button class="btn btn-primary" id="btn-vote"' + (selectedOption ? '' : ' disabled') + '>투표하기</button>';
-    }
+    html += '<button class="btn btn-primary" id="btn-vote"' + (selectedOption ? '' : ' disabled') + '>투표하기</button>';
     html += '<button class="btn btn-secondary" id="btn-results">전체 결과 보기</button>';
     html += '</div>';
     html += '<div class="note' + (voteNoteClass||'') + '" id="vote-note">' + (voteNote||'') + '</div>';
@@ -550,7 +543,6 @@
 
     app.querySelectorAll('.option').forEach(function(el){
       el.addEventListener('click', function(){
-        if(voted) return;
         selectedOption = el.getAttribute('data-key');
         render();
       });
@@ -564,7 +556,7 @@
   var voteNoteClass = '';
 
   async function onVote(){
-    if(!selectedOption || hasVoted() || busy) return;
+    if(!selectedOption || busy) return;
     busy = true;
     voteNote = '투표를 반영하는 중입니다…';
     voteNoteClass = '';
@@ -573,7 +565,6 @@
     var res = await supabase.from('votes').insert({ option: chosen });
     busy = false;
     if(!res.error){
-      localStorage.setItem('earthPollVoted', chosen);
       await loadVotes();
       voteNote = '투표해주셔서 감사합니다.';
       voteNoteClass = ' ok';
