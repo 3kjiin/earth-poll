@@ -333,6 +333,21 @@
     margin: 34px 0 26px;
   }
 
+  .comment-name-field{
+    width:100%;
+    background: var(--surface-2);
+    border:1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14px;
+    padding:10px 14px;
+    margin-bottom:8px;
+  }
+  .comment-name-field::placeholder{ color: var(--text-faint); }
+  .comment-name-field:focus-visible, .comment-name-field:focus{
+    outline:2px solid var(--earth); outline-offset:1px;
+  }
   .comment-form textarea{
     width:100%;
     background: var(--surface-2);
@@ -349,12 +364,8 @@
     outline:2px solid var(--earth); outline-offset:1px;
   }
   .comment-form-foot{
-    display:flex; justify-content:space-between; align-items:center;
+    display:flex; justify-content:flex-end; align-items:center;
     margin-top:10px; gap:10px;
-  }
-  .comment-as{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11.5px; color:var(--text-faint);
   }
 
   .comments-list{ display:flex; flex-direction:column; gap:14px; margin-top:22px; }
@@ -478,13 +489,10 @@
   var editingCommentId = null;
   var busy = false;
 
-  function getVoterName(){
-    var n = localStorage.getItem('earthPollName');
-    if(!n){
-      n = '지구인 #' + Math.floor(1000 + Math.random()*9000);
-      localStorage.setItem('earthPollName', n);
-    }
-    return n;
+  async function nextAnonymousName(){
+    var res = await supabase.from('comments').select('id', { count:'exact', head:true }).like('name', '지구인#%');
+    var n = (res.count || 0) + 1;
+    return '지구인#' + n;
   }
 
   function totalVotes(){
@@ -619,6 +627,7 @@
 
   // ---------- RESULTS VIEW ----------
   var commentDraft = '';
+  var commentNameDraft = localStorage.getItem('earthPollLastName') || '';
   var commentNote = '';
   var commentNoteClass = '';
 
@@ -661,9 +670,9 @@
 
     html += '<h2 style="font-size:18px;margin-bottom:14px;">댓글 남기기</h2>';
     html += '<div class="comment-form">' +
+      '<input type="text" id="comment-name-input" class="comment-name-field" placeholder="이름 (선택, 비워두면 지구인#N으로 표시됩니다)" maxlength="30" value="' + escapeHTML(commentNameDraft) + '">' +
       '<textarea id="comment-input" placeholder="지구를 위한 생각을 남겨주세요…" maxlength="500">' + escapeHTML(commentDraft) + '</textarea>' +
       '<div class="comment-form-foot">' +
-        '<span class="comment-as">' + escapeHTML(getVoterName()) + ' 으로 게시됩니다</span>' +
         '<button class="btn btn-primary btn-small" id="btn-comment">댓글 남기기</button>' +
       '</div>' +
       '<div class="note' + commentNoteClass + '">' + commentNote + '</div>' +
@@ -692,6 +701,8 @@
     } else {
       document.getElementById('btn-admin').addEventListener('click', openAdminModal);
     }
+    var cni = document.getElementById('comment-name-input');
+    cni.addEventListener('input', function(){ commentNameDraft = cni.value; });
     var ci = document.getElementById('comment-input');
     ci.addEventListener('input', function(){ commentDraft = ci.value; });
     document.getElementById('btn-comment').addEventListener('click', onAddComment);
@@ -762,10 +773,14 @@
     var text = commentDraft.trim();
     if(!text || busy) return;
     busy = true;
-    var name = getVoterName();
     commentNote = '게시하는 중…';
     commentNoteClass = '';
     render();
+    var customName = commentNameDraft.trim();
+    var name = customName || await nextAnonymousName();
+    if(customName){
+      localStorage.setItem('earthPollLastName', customName);
+    }
     var res = await supabase.from('comments').insert({ name: name, body: text });
     busy = false;
     commentDraft = '';
