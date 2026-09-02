@@ -690,20 +690,20 @@
     var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     var OPTIONS = [
-      {key: 'yes', label: '동참하고 싶다', color: 'var(--earth)', hex: '#34c3a6'},
-      {key: 'no', label: '동참하고 싶지 않다', color: 'var(--fire)', hex: '#ff6a3d'},
-      {key: 'unsure', label: '잘 모르겠다', color: 'var(--gold)', hex: '#d9b25f'}
+      { key: 'yes', label: '동참하고 싶다', color: 'var(--earth)', hex: '#34c3a6' },
+      { key: 'no', label: '동참하고 싶지 않다', color: 'var(--fire)', hex: '#ff6a3d' },
+      { key: 'unsure', label: '잘 모르겠다', color: 'var(--gold)', hex: '#d9b25f' }
     ];
 
     var app = document.getElementById('app');
 
     // state.comments items: { id, name, body, created_at }
-    var state = {votes: {yes: 0, no: 0, unsure: 0}, comments: []};
+    var state = { votes: { yes: 0, no: 0, unsure: 0 }, comments: [] };
 
     async function loadVotes() {
       var res = await supabase.from('votes').select('option');
-      if (res.error) {console.error(res.error); return;}
-      var counts = {yes: 0, no: 0, unsure: 0};
+      if (res.error) { console.error(res.error); return; }
+      var counts = { yes: 0, no: 0, unsure: 0 };
       (res.data || []).forEach(function (row) {
         if (counts.hasOwnProperty(row.option)) counts[row.option]++;
       });
@@ -711,19 +711,19 @@
     }
 
     async function loadComments() {
-      var res = await supabase.from('comments').select('*').order('created_at', {ascending: false});
-      if (res.error) {console.error(res.error); return;}
+      var res = await supabase.from('comments').select('*').order('created_at', { ascending: false });
+      if (res.error) { console.error(res.error); return; }
       state.comments = res.data || [];
     }
 
     function subscribeRealtime() {
       supabase
         .channel('earth-poll-changes')
-        .on('postgres_changes', {event: '*', schema: 'public', table: 'votes'}, async function () {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, async function () {
           await loadVotes();
           render();
         })
-        .on('postgres_changes', {event: '*', schema: 'public', table: 'comments'}, async function () {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, async function () {
           await loadComments();
           render();
         })
@@ -736,7 +736,7 @@
     var busy = false;
 
     async function nextAnonymousName() {
-      var res = await supabase.from('comments').select('id', {count: 'exact', head: true}).like('name', '지구인#%');
+      var res = await supabase.from('comments').select('id', { count: 'exact', head: true }).like('name', '지구인#%');
       var n = (res.count || 0) + 1;
       return '지구인#' + n;
     }
@@ -752,12 +752,12 @@
 
     function escapeHTML(s) {
       return String(s).replace(/[&<>"']/g, function (c) {
-        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
     }
 
-    function route() {return location.hash === '#results' ? 'results' : 'vote';}
-    function goTo(r) {location.hash = r === 'results' ? '#results' : '#vote';}
+    function route() { return location.hash === '#results' ? 'results' : 'vote'; }
+    function goTo(r) { location.hash = r === 'results' ? '#results' : '#vote'; }
     window.addEventListener('hashchange', render);
 
     // ---------- VOTE VIEW ----------
@@ -767,7 +767,7 @@
       html += '<div class="eyebrow">EARTH ALERT · LIVE POLL</div>';
       html += '<h1>지구를 살리는 일에,<br>당신은 동참하시겠습니까?</h1>';
 
-      html += '<div class="porthole-wrap"><div class="porthole"><img src="assets/earth_storyboard_v4.gif" alt="파괴되는 지구를 보여주는 애니메이션"></div></div>';
+      html += '<div class="porthole-wrap"><div class="porthole"><img src="assets/earth_storyboard_v5.gif" alt="파괴되는 지구를 보여주는 애니메이션"></div></div>';
 
       html += '<p class="lead">기후 위기는 더 이상 먼 미래의 이야기가 아닙니다. 지금 이 순간에도 빙하는 녹고, 숲은 사라지고, 바다는 뜨거워지고 있습니다. 작은 습관 하나를 바꾸는 일이 지구가 버틸 수 있는 시간을 늘립니다. 당신의 생각을 투표로 남겨주세요.</p>';
 
@@ -797,7 +797,7 @@
       });
       var vb = document.getElementById('btn-vote');
       if (vb) vb.addEventListener('click', onVote);
-      document.getElementById('btn-results').addEventListener('click', function () {goTo('results');});
+      document.getElementById('btn-results').addEventListener('click', function () { goTo('results'); });
     }
 
     var voteNote = '';
@@ -810,13 +810,13 @@
       voteNoteClass = '';
       render();
       var chosen = selectedOption;
-      var res = await supabase.from('votes').insert({option: chosen});
+      var res = await supabase.from('votes').insert({ option: chosen });
       busy = false;
       if (!res.error) {
         await loadVotes();
         voteNote = '투표해주셔서 감사합니다.';
         voteNoteClass = ' ok';
-        setTimeout(function () {goTo('results');}, 200);
+        setTimeout(function () { goTo('results'); }, 200);
       } else {
         voteNote = '투표 반영에 실패했습니다. 잠시 후 다시 시도해주세요.';
         voteNoteClass = ' err';
@@ -877,7 +877,7 @@
         '<div class="note' + commentNoteClass + '">' + commentNote + '</div>' +
         '</div>';
 
-      var comments = state.comments.slice().sort(function (a, b) {return new Date(b.created_at) - new Date(a.created_at);});
+      var comments = state.comments.slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
       html += '<div class="comments-list">';
       if (comments.length === 0) {
         html += '<div class="empty-state">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</div>';
@@ -890,7 +890,7 @@
 
       app.innerHTML = html;
 
-      document.getElementById('btn-back').addEventListener('click', function () {goTo('vote');});
+      document.getElementById('btn-back').addEventListener('click', function () { goTo('vote'); });
       if (isAdmin) {
         document.getElementById('btn-logout').addEventListener('click', function () {
           isAdmin = false;
@@ -901,9 +901,9 @@
         document.getElementById('btn-admin').addEventListener('click', openAdminModal);
       }
       var cni = document.getElementById('comment-name-input');
-      cni.addEventListener('input', function () {commentNameDraft = cni.value;});
+      cni.addEventListener('input', function () { commentNameDraft = cni.value; });
       var ci = document.getElementById('comment-input');
-      ci.addEventListener('input', function () {commentDraft = ci.value;});
+      ci.addEventListener('input', function () { commentDraft = ci.value; });
       document.getElementById('btn-comment').addEventListener('click', onAddComment);
 
       wireCommentActions();
@@ -951,7 +951,7 @@
           var ta = document.getElementById('edit-' + id);
           var newText = ta.value.trim();
           if (!newText) return;
-          var res = await supabase.from('comments').update({body: newText}).eq('id', id);
+          var res = await supabase.from('comments').update({ body: newText }).eq('id', id);
           if (!res.error) await loadComments();
           editingCommentId = null;
           render();
@@ -977,7 +977,7 @@
       render();
       var customName = commentNameDraft.trim();
       var name = customName || await nextAnonymousName();
-      var res = await supabase.from('comments').insert({name: name, body: text});
+      var res = await supabase.from('comments').insert({ name: name, body: text });
       busy = false;
       commentDraft = '';
       if (!res.error) {
@@ -1028,8 +1028,8 @@
         '</div>';
       document.body.appendChild(overlay);
 
-      function close() {overlay.remove();}
-      overlay.addEventListener('click', function (e) {if (e.target === overlay) close();});
+      function close() { overlay.remove(); }
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
       document.getElementById('admin-cancel').addEventListener('click', close);
       var idInput = document.getElementById('admin-id');
       var pwInput = document.getElementById('admin-pw');
@@ -1049,7 +1049,7 @@
       }
       document.getElementById('admin-submit').addEventListener('click', tryLogin);
       [idInput, pwInput].forEach(function (inp) {
-        inp.addEventListener('keydown', function (e) {if (e.key === 'Enter') tryLogin();});
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryLogin(); });
       });
     }
 
