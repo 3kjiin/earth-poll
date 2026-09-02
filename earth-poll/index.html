@@ -825,7 +825,7 @@
 
     // ---------- RESULTS VIEW ----------
     var commentDraft = '';
-    var commentNameDraft = localStorage.getItem('earthPollLastName') || '';
+    var commentNameDraft = '';
     var commentNote = '';
     var commentNoteClass = '';
 
@@ -976,9 +976,6 @@
       render();
       var customName = commentNameDraft.trim();
       var name = customName || await nextAnonymousName();
-      if (customName) {
-        localStorage.setItem('earthPollLastName', customName);
-      }
       var res = await supabase.from('comments').insert({name: name, body: text});
       busy = false;
       commentDraft = '';
