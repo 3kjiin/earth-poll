@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>지구 SOS 투표</title>
+<title>지구 살리기 투표</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link
@@ -549,13 +549,6 @@
     color: var(--earth);
   }
 
-  .comment-time {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text-faint);
-    flex-shrink: 0;
-  }
-
   .comment-body {
     font-size: 14.5px;
     line-height: 1.65;
@@ -762,12 +755,6 @@
       });
     }
 
-    function fmtTime(iso) {
-      try {
-        return new Date(iso).toLocaleString('ko-KR', {month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
-      } catch (e) {return '';}
-    }
-
     function route() {return location.hash === '#results' ? 'results' : 'vote';}
     function goTo(r) {location.hash = r === 'results' ? '#results' : '#vote';}
     window.addEventListener('hashchange', render);
@@ -924,7 +911,7 @@
     function renderComment(c) {
       var editing = editingCommentId === c.id;
       var html = '<div class="comment" data-id="' + c.id + '">';
-      html += '<div class="comment-head"><span class="comment-name">' + escapeHTML(c.name) + '</span><span class="comment-time">' + fmtTime(c.created_at) + '</span></div>';
+      html += '<div class="comment-head"><span class="comment-name">' + escapeHTML(c.name) + '</span></div>';
       if (editing) {
         html += '<div class="comment-edit"><textarea id="edit-' + c.id + '">' + escapeHTML(c.body) + '</textarea>' +
           '<div class="comment-admin-row">' +
